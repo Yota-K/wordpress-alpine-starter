@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+  mysql:
+    container_name: wp_starter_db
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD} 
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./docker_database:/etc/mysql/mysql.conf.d
+      - ./docker_database/init_db:/docker-entrypoint-initdb.d
+      - wp_starter_db_data:/var/lib/mysql
+
+  wordpress:
+    container_name: wp_starter_app
+    build: ./php
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD} 
+    depends_on:
+      - mysql
+    volumes:
+      - ./app:/var/www/html
+
+  wordpress_nginx:
+    container_name: wp_starter_web
+    image: nginx:mainline-alpine
+    ports:
+      - 80:80
+    depends_on:
+      - wordpress
+    volumes:
+      - ./app:/var/www/html
+      - ./nginx/wordpress/default.conf:/etc/nginx/conf.d/default.conf
+
+  phpmyadmin:
+    container_name: wp_starter_phpmyadmin
+    image: phpmyadmin/phpmyadmin:fpm-alpine
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=${MYSQL_USER}
+      - PMA_PASSWORD=${MYSQL_PASSWORD} 
+    depends_on:
+      - mysql
+    volumes:
+      - phpmyadmin_data:/var/www/html/
+
+  phpmyadmin_nginx:
+    container_name: wp_starter_phpmyadmin_web
+    image: nginx:mainline-alpine
+    ports:
+      - 8080:80
+    depends_on:
+      - phpmyadmin
+    volumes:
+      - phpmyadmin_data:/var/www/html/
+      - ./nginx/phpmyadmin/default.conf:/etc/nginx/conf.d/default.conf
+
+volumes:
+  wp_starter_db_data:
+  phpmyadmin_data:

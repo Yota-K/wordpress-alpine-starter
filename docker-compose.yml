@@ -62,6 +62,14 @@ services:
       - phpmyadmin_data:/var/www/html/
       - ./nginx/phpmyadmin/default.conf:/etc/nginx/conf.d/default.conf
 
+  # container_nameをmailhogにしないとなぜか正常に動かない
+  # 複数のmailhogを立ち上げることを考慮するため、container_nameは命名しない
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+      - 1025:1025
+
 volumes:
   wp_starter_db_data:
   phpmyadmin_data:
